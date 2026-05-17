@@ -1988,7 +1988,7 @@ slip_ratio = (\`WheelSpeed_FL\` - \`Speed\`) / \`Speed\`
   title: 'Live Dash Viewer',
   lede: 'Watch a live iRacing session remotely in your browser via Live Dash.',
   prev: ['live.output', 'Live Output'],
-  next: ['guide.training', 'Building a Training Graph'],
+  next: ['guide.corner-modes', 'Corner Modes — Find What to Investigate'],
   toc: ['overview', 'viewer-features'],
   tocLabels: ['Overview', 'Web Viewer Features'],
   body: `
@@ -2013,12 +2013,141 @@ slip_ratio = (\`WheelSpeed_FL\` - \`Speed\`) / \`Speed\`
 // 07 — WORKFLOWS & GUIDES
 // ─────────────────────────────────────────────────────────────────
 
+'guide.corner-modes': {
+  section: 'Workflows & Guides',
+  tier: 'pro',
+  title: 'Corner Modes — Find What to Investigate',
+  lede: "The atlas for telemetry analysis: cluster a corner's passes into driving modes, see what makes each mode different, then drill in with the tools you already know.",
+  prev: ['live.relay', 'Live Dash Viewer'],
+  next: ['guide.training', 'Building a Training Graph'],
+  toc: [
+    'atlas',
+    'open-and-pick',
+    'reading-cards',
+    'drill-view',
+    'canonical-workflow',
+    'going-deeper',
+  ],
+  tocLabels: [
+    'The Atlas Concept',
+    'Open a Set, Pick a Corner',
+    'Reading the Mode Cards',
+    'The Drill-In View',
+    'The Canonical Workflow',
+    'Going Deeper',
+  ],
+  body: `
+<h2 id="atlas">The Atlas Concept</h2>
+<p>The <strong>Corner Modes</strong> panel (right column, below the Scatter panel) clusters every flying pass through a chosen corner into a handful of distinct driving <em>modes</em> — coherent groups of laps that were driven the same way. Each mode is a card with a color, a sector-time delta vs the population average, a list of post-hoc tags ("Lower min Speed", "Later release Brake", …) and a per-stint distribution bar.</p>
+<p>It's deliberately a <strong>pointer, not a source of truth</strong>. The panel tells you <em>where to look</em>; the actual investigation happens in the tools you already use — synced 2D and 3D plots, the dashboard, the scatter panel. Think of it as the atlas for your session: it shows you the territory and which regions are worth visiting, then you grab the field tools to dig in.</p>
+<div class="callout note">
+  <span class="ic">i</span>
+  <div>
+    <span class="lbl">Why an atlas</span>
+    <p>A session with 80 laps doesn't have 80 different driving styles — it has maybe 3–5 distinct ones, repeated. Pulling them apart turns a wall of nearly-identical traces into "here are your three approaches, here's the delta between them, here's the lap that exemplifies each." That's where coaching and setup conversations actually start.</p>
+  </div>
+</div>
+
+<h2 id="open-and-pick">Open a Set, Pick a Corner</h2>
+<ol>
+  <li><strong>Run a workflow first.</strong> Corner Modes works off the most-recent run in the Run Store — load IBT data, execute the graph, then look right. Multi-segment sets (multiple stints in one set) are fully supported.</li>
+  <li><strong>Pick a corner</strong> from the dropdown at the top. Corners are auto-detected from the dash's track outline; a re-detection runs whenever a new track is loaded. You can also add <strong>★ Custom</strong> entries with arbitrary LapDistPct bounds — useful for complex chicanes, or for slicing a long section like Maggotts–Becketts.</li>
+  <li>Analysis fires automatically on every change. There's no Analyze button — change the corner, K, dim, channels, label rules, or the source run and the cards re-cluster immediately. Results are disk-cached per (track, corner, settings).</li>
+</ol>
+<p>The <strong>Options ▾</strong> menu groups the rest of the controls:</p>
+<ul>
+  <li><strong>K</strong> — target number of modes. Higher = finer splits; lower = broader groups. The actual K may be lower than requested when there's not enough data.</li>
+  <li><strong>Dim</strong> — PCA components used for clustering (default 8). Mostly leave alone unless modes look unstable on small data.</li>
+  <li><strong>Channels…</strong> — which telemetry channels feed the clustering. Speed / Brake / Throttle / Steering by default; you can add any Raw or AuxMath channel.</li>
+  <li><strong>Labels…</strong> — edit the auto-tag rule set. Each rule reduces a channel to a scalar (mean, peak, min, first-cross, last-cross, range, etc.); modes whose scalar lands far from the population mean get tagged.</li>
+  <li><strong>Fit-score matrix…</strong> / <strong>Scalar correlation matrix…</strong> — see "Going Deeper" below.</li>
+  <li><strong>+ all (replace ghosts)</strong> — clears existing ghosts and adds the top-N most-representative pass of each mode as a ghost. The N per mode comes from each card's spinbox.</li>
+  <li><strong>Sync to corner</strong> — sets the ghost sync point + playback range to the current corner's span and seeks the playhead there. Pairs with the next bullet.</li>
+  <li><strong>Auto</strong> — when checked, every successful analysis automatically runs "+ all" and "Sync". Lets you scrub through corners and watch the ghosts repaint themselves without clicking anything.</li>
+</ul>
+
+<h2 id="reading-cards">Reading the Mode Cards</h2>
+<p>Each card is a one-glance summary. Top row:</p>
+<ul>
+  <li><strong>Color swatch</strong> — click to recolor. The color carries through to every ghost added from this mode, so ghosts from one mode visually group in playback.</li>
+  <li><strong>Mode N</strong> + percent + <strong>Δs</strong> — share of the corner's passes in this mode, plus the average corner-time delta vs the population. Green = faster, orange = slower.</li>
+  <li><strong>spinbox + ＋</strong> — add the top-N most-representative passes of this mode as ghosts.</li>
+  <li><strong>▶</strong> — play the canonical (most-representative) pass.</li>
+  <li><strong>✕</strong> — exclude every pass in this mode and re-cluster the rest. Use to weed out in/out laps, spins, and outlier groups; reset via the status-line link.</li>
+  <li><strong>›</strong> — open the drill-in view (next section).</li>
+</ul>
+<p>Stats line:</p>
+<ul>
+  <li><strong>σ</strong> — within-mode std-dev of corner duration. Lower = more repeatable driving (the strong coaching signal — consistency often matters more than peak speed).</li>
+  <li><strong>stint Lx–Ly</strong> — which laps within the segment this mode tends to occur in (early stint vs late stint).</li>
+  <li><strong>± ml</strong> — fuel-per-corner delta vs the population (visible when the difference is meaningful).</li>
+</ul>
+<p>Below the stats: a thin <strong>segment-distribution bar</strong> shows what fraction of the mode's passes came from each stint (S1 / S2 / …) when multiple segments exist. A mode dominated by one stint is a strong hint that the cause is between-stint — setup, tires, weather, driver fatigue. Above the bar: the panel header carries a <code>seg η²=…</code> chip showing the same effect at the whole-corner level.</p>
+<p>The <strong>auto-tags</strong> at the bottom of the card are the post-hoc explanation: "Higher entry Speed", "Later release Brake", "Wider range Steering", and so on. Each tag means the mode's mean scalar for that rule is at least 0.4 standard deviations from the population mean. Hover for the z-scores.</p>
+
+<h2 id="drill-view">The Drill-In View</h2>
+<p>Click <strong>›</strong> on any card (or anywhere on the card's open arrow) to open the drill view. Three panes, all draggable via the splitter handles:</p>
+<ul>
+  <li><strong>Channel-trace chart</strong> (top) — per-channel mean trace for this mode (green) overlaid on the population mean (gray dashed). One sub-plot per channel; x-axes are linked. Lets you see <em>where in the corner</em> the mode differs from the population — earlier brake release, mid-corner throttle dip, exit-phase steering correction.</li>
+  <li><strong>Representation scatter</strong> (middle) — every member of the mode plotted as a colored dot at (x = scalar, y = distance-to-centroid in PCA space). Lower y = more typical of the mode; higher y = an outlier within the mode.
+    <ul>
+      <li>The <strong>x-axis dropdown</strong> switches the scalar: <em>Section</em> (corner-slice duration), <em>Sector</em> (containing iRacing sector time), <em>Lap</em> (full lap time), then every label rule — pick "min Speed" to see how min-speed distributes within this mode, "release Brake" for release-frac distribution, etc. Each entry carries an <code>(r=0.NN)</code> fit-score (multi-R of the scalar against within-mode coords) so you can see at a glance which scalar best explains the mode's spread. The dashed best-fit line is colored by that score: red = noisy fit, green = clean linear relationship.</li>
+      <li><strong>Left-click a dot</strong> to toggle that pass as a ghost. A yellow ring marks every dot that's currently an active ghost across any open plot — same gesture in reverse to remove.</li>
+      <li><strong>Left-drag</strong> to draw a rectangle. On release, every point inside toggles: if any are already active ghosts, the active ones get removed; otherwise all points in the box get added. Lasso-add and lasso-deselect with one gesture.</li>
+      <li><strong>Right-click</strong> any dot for a context menu (Play / Add or Remove ghost).</li>
+    </ul>
+  </li>
+  <li><strong>Member list</strong> (bottom) — every pass in the mode by segment + lap, with its full lap time. Double-click to seek the playhead; right-click for the same Play / Add-as-ghost menu.</li>
+</ul>
+
+<h2 id="canonical-workflow">The Canonical Workflow</h2>
+<p>This is the recommended flow for any post-session review:</p>
+<ol>
+  <li><strong>Open your IBT files</strong> and run the standard workflow. (See <a href="docs-article.html?page=gs.first-workflow">Your First Workflow</a>.)</li>
+  <li><strong>Open Corner Modes</strong> on the right. Pick a corner you want to understand — start with one where lap-time spread is large.</li>
+  <li><strong>Read the cards.</strong> The shape of the modes tells the first story:
+    <ul>
+      <li><em>One dominant mode</em> (e.g. 80% of laps) and one or two stragglers → you're driving this corner consistently; the stragglers are usually outliers worth checking but not coaching signal.</li>
+      <li><em>Two or three roughly balanced modes</em> with meaningfully different Δs → you have multiple approaches competing; the tags tell you what they differ on.</li>
+      <li><em>Stint-purity in the segment bar</em> → the cause is between-stint (setup, tires, conditions, fatigue).</li>
+      <li><em>Time spread within a mode is small but Δ is non-zero</em> → that mode's a repeatable but not optimal approach; the gap to the fast mode is your coaching margin.</li>
+    </ul>
+  </li>
+  <li><strong>"+ all" + "Sync"</strong> (or turn on <strong>Auto</strong>) to drop the top-N pass of every mode into 3D playback. The panel handles the color grouping so each mode reads as one family.</li>
+  <li><strong>Open a 2D plot</strong> alongside (waterfall, normal traces, whatever's set up). The same ghosts appear there; the cursor stays synced. Look at <strong>Brake</strong>, <strong>Throttle</strong>, <strong>Steering</strong>, <strong>Speed</strong> traces lap-by-lap. The mode tags pointed you at what to look at — now confirm with the actual trace shape.</li>
+  <li><strong>Use the dashboard</strong> for a high-level instrument readout, or the <strong>scatter panel</strong> (G-G-V, pedal trace, handling envelope) to triangulate the same finding from a different angle.</li>
+  <li><strong>Drill into individual outliers.</strong> In the drill-in scatter, dots far from the cluster centroid are passes that didn't quite fit the mode. Click them as ghosts and compare — they're often the most instructive (a brake release that happened 0.3 s earlier than the rest of the mode, a slightly different line through the apex).</li>
+  <li><strong>Form a recommendation.</strong> A coaching call ("delay your brake release") or a setup change ("the front wing's pushing under load — try one tick less"). The atlas got you to the right corner of the map; the synced plots prove the hypothesis; the recommendation is yours.</li>
+</ol>
+<div class="callout tip">
+  <span class="ic">&#10003;</span>
+  <div>
+    <span class="lbl">Tip</span>
+    <p>The Auto checkbox makes corner-hopping nearly free. Set up your 3D + 2D plots once, toggle Auto on, then just change the corner dropdown — ghosts repaint, sync point + range jump to the new corner, and you're looking at it.</p>
+  </div>
+</div>
+
+<h2 id="going-deeper">Going Deeper</h2>
+<p>Two analysis dialogs in the <strong>Options ▾</strong> menu help when the per-mode tags don't quite explain what's happening:</p>
+<ul>
+  <li><strong>Fit-score matrix</strong> — a rule × mode heatmap. Rows are the time options plus every label rule; columns are the modes plus an <strong>All</strong> column (population-level fit). Each cell is a multi-R fit score: how much of the within-mode spread is explained by that scalar. Sorted by max-across-modes so the most-explanatory scalars float to the top. Click any mode cell to drill into that mode with the cell's x-axis already selected.
+    <ul>
+      <li>High in <strong>All</strong> AND high in some mode column → the scalar discriminates modes.</li>
+      <li>Low in <strong>All</strong> but high in one mode column → that scalar captures within-mode nuance the cluster boundary missed.</li>
+    </ul>
+  </li>
+  <li><strong>Scalar correlation matrix</strong> — a |Pearson r| heatmap between every scalar pair. Column headers run diagonally so wordy labels fit. The <strong>Subset</strong> dropdown switches between All passes and per-mode views; the heatmap tints in the mode's swatch color (red for All) for visual association. Click any off-diagonal cell to open a paired scatter + linear best-fit line for that pair. Useful for spotting redundant rules (two rules with |r| ≈ 1 measure the same thing — candidates for pruning) and for surfacing relationships that only exist within a driving style.</li>
+</ul>
+<p>And one panel-level signal that doesn't need a dialog: the <code>seg η²=…</code> chip in the status line is the fraction of variation in how this corner is driven that's between-stint vs within-stint. Green at ≥ 0.15 — different stints are driving this corner notably differently. Gray near zero — stint doesn't matter much for this corner.</p>
+`
+},
+
 'guide.training': {
   section: 'Workflows & Guides',
   tier: 'studio',
   title: 'Building a Training Graph',
   lede: 'End-to-end guide for training a neural network on telemetry data.',
-  prev: ['live.relay', 'Live Dash Viewer'],
+  prev: ['guide.corner-modes', 'Corner Modes — Find What to Investigate'],
   next: ['guide.live-inference', 'Live Inference Setup'],
   toc: ['overview', 'graph', 'training', 'evaluation'],
   tocLabels: ['Overview', 'Graph Setup', 'Training', 'Evaluation'],
