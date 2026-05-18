@@ -1364,8 +1364,8 @@ tmp = <span class="s">\`Throttle\`</span> - <span class="s">\`Brake\`</span>
   lede: 'Browse vehicle models in a 3D carousel, set defaults, and configure mesh visualization.',
   prev: ['dash.live-binding', 'Live Binding'],
   next: ['tools.track-lib', 'Track Library'],
-  toc: ['overview', 'carousel', 'vehicle-config', 'mesh-classes'],
-  tocLabels: ['Overview', '3D Carousel', 'Vehicle Configuration', 'Mesh Classes'],
+  toc: ['overview', 'carousel', 'vehicle-config', 'mesh-classes', 'bundled-vehicles'],
+  tocLabels: ['Overview', '3D Carousel', 'Vehicle Configuration', 'Mesh Classes', 'Bundled Vehicles'],
   body: `
 <h2 id="overview">Overview</h2>
 <p>The <strong>Vehicle Library Viewer</strong> (Tools > Libraries > Vehicle Library Viewer) is a 3D carousel interface for browsing and selecting vehicle models. Vehicles are displayed as rotating 3D meshes. The selected vehicle is used as the ghost car model in 3D plot rendering.</p>
@@ -1398,6 +1398,14 @@ tmp = <span class="s">\`Throttle\`</span> - <span class="s">\`Brake\`</span>
   <li><strong>Hide</strong>: invisible (interior parts you don't want rendered). Auto-detected from names containing "hide".</li>
 </ul>
 <p>Override automatic classification via the <code>mesh_classes</code> dict in the vehicle JSON config.</p>
+
+<h2 id="bundled-vehicles">Bundled Vehicles</h2>
+<p>Studio ships with two generic vehicle models that cover the most common car shapes for ghost-car rendering and dashboard previews:</p>
+<ul>
+  <li><strong>2026 LLS LMP</strong>: a generic Le Mans prototype body, suited to sportscars and other closed-cockpit road racers.</li>
+  <li><strong>2026 LLS Stock</strong>: a generic stock car body, suited to NASCAR-style oval racing.</li>
+</ul>
+<p>More vehicle models will be added in future releases. Until your specific car is bundled, pick whichever of the two is the closest visual fit, or drop your own OBJ + JSON pair into the vehicle library folder.</p>
 `
 },
 
@@ -1408,8 +1416,8 @@ tmp = <span class="s">\`Throttle\`</span> - <span class="s">\`Brake\`</span>
   lede: 'Record tracks, manage centerline geometry, sector boundaries, and GPS reference points.',
   prev: ['tools.vehicle-lib', 'Vehicle Library'],
   next: ['tools.scope-builder', 'Scope Builder'],
-  toc: ['overview', 'track-data', 'recording', 'auto-matching'],
-  tocLabels: ['Overview', 'Track Data', 'Track Recording', 'Auto-Matching'],
+  toc: ['overview', 'track-data', 'recording', 'auto-matching', 'bundled-tracks'],
+  tocLabels: ['Overview', 'Track Data', 'Track Recording', 'Auto-Matching', 'Bundled Tracks'],
   body: `
 <h2 id="overview">Overview</h2>
 <p>The <strong>Track Library</strong> (Tools > Libraries > Track Library) manages track definitions used for 3D visualization, sector timing, and spatial analysis. Each track stores geometry and metadata as a JSON file.</p>
@@ -1435,6 +1443,35 @@ tmp = <span class="s">\`Throttle\`</span> - <span class="s">\`Brake\`</span>
 
 <h2 id="auto-matching">Auto-Matching</h2>
 <p>When the Load Data node's Track ID is set to <code>__auto__</code>, it uses session metadata (track name from IBT header) to automatically find the matching track in the library. This means you usually only need to record a track once, it's reused for all future sessions at that circuit.</p>
+
+<h2 id="bundled-tracks">Bundled Tracks</h2>
+<p>Studio ships with the following tracks pre-installed in the Track Library. Auto-Match recognizes these out of the box; you can also pick them explicitly in any Load Data node.</p>
+<ul>
+  <li><strong>Autódromo José Carlos Pace</strong> (Interlagos, Grand Prix)</li>
+  <li><strong>Bristol Motor Speedway</strong> (Single Pit Road oval)</li>
+  <li><strong>Centripetal Circuit</strong> (skidpad)</li>
+  <li><strong>Charlotte Motor Speedway</strong> (Oval)</li>
+  <li><strong>Circuit de Spa-Francorchamps</strong> (Grand Prix)</li>
+  <li><strong>Circuito de Navarra</strong> (Speed Circuit Long)</li>
+  <li><strong>Daytona International Speedway</strong> (Road Course)</li>
+  <li><strong>Dover Motor Speedway</strong></li>
+  <li><strong>Kansas Speedway</strong> (Oval)</li>
+  <li><strong>Las Vegas Motor Speedway</strong> (Oval)</li>
+  <li><strong>Lime Rock Park</strong> (Grand Prix)</li>
+  <li><strong>Michigan International Speedway</strong></li>
+  <li><strong>Mount Panorama Circuit</strong> (Bathurst)</li>
+  <li><strong>North Wilkesboro Speedway</strong> (Oval)</li>
+  <li><strong>Okayama International Circuit</strong> (Full Course)</li>
+  <li><strong>Pocono Raceway</strong> (Oval)</li>
+  <li><strong>Richmond Raceway</strong></li>
+  <li><strong>Road America</strong> (Full Course)</li>
+  <li><strong>Silverstone Circuit</strong> (Arena Grand Prix)</li>
+  <li><strong>Texas Motor Speedway</strong> (Oval)</li>
+  <li><strong>Tsukuba Circuit</strong> (2k Full)</li>
+  <li><strong>Watkins Glen</strong> (Boot)</li>
+  <li><strong>WeatherTech Raceway Laguna Seca</strong></li>
+</ul>
+<p>New tracks are added frequently, and the geometric detail of each one (barriers, curbs, elevation accuracy) will continue to improve in future releases. You can also record your own tracks at any time using the Track Recording flow above.</p>
 `
 },
 
